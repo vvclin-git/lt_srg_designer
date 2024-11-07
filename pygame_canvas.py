@@ -122,8 +122,8 @@ class ZoomableCanvas:
                     # Update shape position
                     dx, dy = (event.pos[0] - self.x - self.drag_start[0]), (event.pos[1] - self.y - self.drag_start[1])
                     rect = self.selected_shape[1]['rect']
-                    rect.x += dx
-                    rect.y += dy
+                    rect.x += dx / self.zoom
+                    rect.y += dy / self.zoom
                     self.drag_start = ((event.pos[0] - self.x), (event.pos[1] - self.y))
                     print(f'drag started at: {self.drag_start[0]}, {self.drag_start[1]}, offset: {dx}, {dy}')
                     self.update_canvas()
@@ -131,8 +131,8 @@ class ZoomableCanvas:
                     # Update canvas offset
                     dx, dy = (event.pos[0] - self.x - self.drag_start[0]), (event.pos[1] - self.y - self.drag_start[1])
                     # dx, dy = event.pos[0] - self.x - self.drag_start[0], event.pos[1] - self.y - self.drag_start[1]
-                    self.offset_x += dx
-                    self.offset_y += dy
+                    self.offset_x += dx / self.zoom
+                    self.offset_y += dy / self.zoom
                     self.drag_start = ((event.pos[0] - self.x), (event.pos[1] - self.y))
                     print(f'drag started at: {self.drag_start[0]}, {self.drag_start[1]}, offset: {dx}, {dy}')
 
@@ -186,16 +186,16 @@ class ZoomableCanvas:
         for shape in self.shapes:
             shape_type, params = shape
             if shape_type == "circle":
-                pygame.draw.circle(self.canvas_surface, params["color"], (int(params["position"][0] * self.zoom), int(params["position"][1] * self.zoom)), int(params["radius"] * self.zoom))
+                pygame.draw.circle(self.canvas_surface, params["color"], (int(params["position"][0]), int(params["position"][1])), int(params["radius"]))
             elif shape_type == "rectangle":
                 rect = params["rect"].copy()
-                rect.x = int(rect.x * self.zoom)
-                rect.y = int(rect.y * self.zoom)
-                rect.width = int(rect.width * self.zoom)
-                rect.height = int(rect.height * self.zoom)
+                rect.x = int(rect.x)
+                rect.y = int(rect.y)
+                rect.width = int(rect.width)
+                rect.height = int(rect.height)
                 pygame.draw.rect(self.canvas_surface, params["color"], rect)
             elif shape_type == "polygon":
-                scaled_points = [(int(x * self.zoom), int(y * self.zoom)) for x, y in params["points"]]
+                scaled_points = [(int(x), int(y)) for x, y in params["points"]]
                 pygame.draw.polygon(self.canvas_surface, params["color"], scaled_points)
 
     def update_canvas(self):

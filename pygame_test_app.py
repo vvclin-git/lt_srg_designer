@@ -48,6 +48,26 @@ class Polygon:
             for vertex in self.vertices:
                 pygame.draw.circle(screen, (255, 0, 0), (int(vertex[0]), int(vertex[1])), 5)  # Draw vertices as red dots
     
+    def point_in_polygon(self, point):
+        x, y = point
+        polygon = self.vertices        
+        n = len(polygon)
+        inside = False
+
+        p1x, p1y = polygon[0]
+        for i in range(n + 1):
+            p2x, p2y = polygon[i % n]
+            if y > min(p1y, p2y):
+                if y <= max(p1y, p2y):
+                    if x <= max(p1x, p2x):
+                        if p1y != p2y:
+                            xinters = (y - p1y) * (p2x - p1x) / (p2y - p1y) + p1x
+                        if p1x == p2x or x <= xinters:
+                            inside = not inside
+            p1x, p1y = p2x, p2y
+
+        return inside
+
     def update_vertex(self, index, new_position):
         """Update a specific vertex position."""
         self.vertices[index] = new_position
@@ -62,6 +82,7 @@ class Polygon:
 # Game variables
 polygon = None
 dragging_vertex = None
+dragging_polygon = False
 
 clock = pygame.time.Clock()
 running = True
@@ -82,6 +103,9 @@ while running:
                 closest_vertex = polygon.get_closest_vertex(event.pos)
                 if closest_vertex is not None:
                     dragging_vertex = closest_vertex  # Start dragging the vertex
+                else:
+                    if polygon.point_in_polygon(event.pos):
+
 
         if event.type == pygame.MOUSEBUTTONUP:
             dragging_vertex = None  # Stop dragging

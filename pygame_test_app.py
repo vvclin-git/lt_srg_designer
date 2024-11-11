@@ -71,6 +71,12 @@ class Polygon:
     def update_vertex(self, index, new_position):
         """Update a specific vertex position."""
         self.vertices[index] = new_position
+    
+    def move_polygon(self, distance):
+        for i in range(len(self.vertices)):
+            print(self.vertices[i][0], distance)
+
+            self.vertices[i] = (self.vertices[i][0] + distance[0], self.vertices[i][1] + distance[1])
 
     def get_closest_vertex(self, mouse_pos, threshold=10):
         """Find the closest vertex to the mouse position."""
@@ -83,7 +89,7 @@ class Polygon:
 polygon = None
 dragging_vertex = None
 dragging_polygon = False
-
+drag_start = (0, 0)
 clock = pygame.time.Clock()
 running = True
 
@@ -105,14 +111,29 @@ while running:
                     dragging_vertex = closest_vertex  # Start dragging the vertex
                 else:
                     if polygon.point_in_polygon(event.pos):
+                        print('move polygon True', end='')
+                        dragging_polygon = True
+                        drag_start = event.pos
+                        print(f', starting point:{event.pos}')
+                    else:
+                        print('move polygon False')
+                        
 
 
         if event.type == pygame.MOUSEBUTTONUP:
             dragging_vertex = None  # Stop dragging
+            dragging_polygon = False
 
-        if event.type == pygame.MOUSEMOTION and dragging_vertex is not None:
+        if event.type == pygame.MOUSEMOTION and polygon is not None and dragging_vertex is not None:
             # Update the vertex position as the mouse moves
             polygon.update_vertex(dragging_vertex, event.pos)
+        
+        if event.type == pygame.MOUSEMOTION and polygon is not None and dragging_polygon is not False:
+            # Update the vertex position as the mouse moves
+            print(f'drag start pos: {drag_start}, event pos: {event.pos}')
+            drag_distance = (event.pos[0] - drag_start[0], event.pos[1] - drag_start[1])
+            polygon.move_polygon(drag_distance)
+            drag_start = event.pos
 
         # Handle GUI button events
         if event.type == pygame.USEREVENT:
@@ -123,7 +144,7 @@ while running:
                 
                 if event.ui_element == save_button:
                     # Save polygon vertices to a text file
-                    with open('polygon_layout.txt', 'w') as f:
+                    with open('polygon_layout.txt', 'a') as f:
                         f.write(f"Polygon Vertices: {polygon.vertices}\n")
     
     # Update pygame_gui manager

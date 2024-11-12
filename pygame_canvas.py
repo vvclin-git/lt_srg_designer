@@ -166,19 +166,6 @@ class ZoomableCanvas:
                         self.selected_polygon = shape
                         return
 
-                    # if shape[0] == 'rectangle':
-                    #     rect = shape[1]['rect']
-                    #     if rect.collidepoint(mouse_x, mouse_y):
-                    #         self.selected_shape = shape
-                    #         print(f', rectangle clicked at rect:{rect.x}, {rect.y}')
-                    #         self.panning = True
-                    #         # if abs(mouse_x - rect.right) < self.resize_margin or abs(mouse_y - rect.bottom) < self.resize_margin:
-                    #         #     self.resizing_shape = True
-                    #         # else:
-                    #         #     self.panning = True
-                    #         self.drag_start = ((event.pos[0] - self.x), (event.pos[1] - self.y))
-                    #         return
-
                 # If no shape is selected, start dragging the canvas
                 self.panning = True
                 self.drag_start = ((event.pos[0] - self.x), (event.pos[1] - self.y))
@@ -215,40 +202,7 @@ class ZoomableCanvas:
                 mouse_x, mouse_y = (event.pos[0] - self.x - self.offset_x) / self.zoom, (event.pos[1] - self.y - self.offset_y) / self.zoom
                 self.selected_polygon.update_vertex(self.dragging_vertex, (mouse_x, mouse_y))
                 self.update_canvas()
-                
-
-            # if self.panning and not self.resizing_shape:
-            #     if self.selected_shape is not None:
-            #         # Update shape position
-            #         dx, dy = (event.pos[0] - self.x - self.drag_start[0]), (event.pos[1] - self.y - self.drag_start[1])
-            #         rect = self.selected_shape[1]['rect']
-            #         rect.x += dx / self.zoom
-            #         rect.y += dy / self.zoom
-            #         self.drag_start = ((event.pos[0] - self.x), (event.pos[1] - self.y))
-            #         print(f'drag started at: {self.drag_start[0]}, {self.drag_start[1]}, offset: {dx}, {dy}')
-            #         self.update_canvas()
-            #     else:
-            #         # Update canvas offset
-            #         dx, dy = (event.pos[0] - self.x - self.drag_start[0]), (event.pos[1] - self.y - self.drag_start[1])
-            #         # dx, dy = event.pos[0] - self.x - self.drag_start[0], event.pos[1] - self.y - self.drag_start[1]
-            #         self.offset_x += dx / self.zoom
-            #         self.offset_y += dy / self.zoom
-            #         self.drag_start = ((event.pos[0] - self.x), (event.pos[1] - self.y))
-            #         print(f'drag started at: {self.drag_start[0]}, {self.drag_start[1]}, offset: {dx}, {dy}')
-
-                # Ensure offset stays within bounds while dragging
-                # self.offset_x = min(max(self.offset_x, -(self.canvas_surface.get_width() * self.zoom - self.width) / self.zoom), 0)
-                # self.offset_y = min(max(self.offset_y, -(self.canvas_surface.get_height() * self.zoom - self.height) / self.zoom), 0)
-
-            # if self.resizing_shape and self.selected_shape is not None:
-            #     shape_type, params = self.selected_shape
-            #     if shape_type == 'rectangle':
-            #         rect = params['rect']
-            #         rect.width = (event.pos[0] - self.x - self.offset_x) / self.zoom - rect.x
-            #         rect.height = (event.pos[1] - self.y - self.offset_y) / self.zoom - rect.y
-
-
-
+   
     def draw(self):
         # Calculate the viewable area of the canvas
         view_rect = pygame.Rect(
@@ -272,27 +226,13 @@ class ZoomableCanvas:
 
         # Blit the scaled portion of the canvas onto the parent surface
         self.parent_surface.blit(scaled_surface, (self.x, self.y))
-    
-    # def add_shape(self, shape_type, **params):
-    #     if shape_type == "circle":
-    #         self.shapes.append(("circle", params))
-    #     elif shape_type == "polygon":
-    #         self.shapes.append(("polygon", params))
-    #     self.update_canvas()
 
     def add_shape(self, shape):
         self.shapes.append(shape)
         self.update_canvas()
     
     def draw_shapes(self):
-        for shape in self.shapes:
-            # shape_type, params = shape
-            # if shape_type == "circle":
-            #     pygame.draw.circle(self.canvas_surface, params["color"], (int(params["position"][0]), int(params["position"][1])), int(params["radius"]))
-            
-            # elif shape_type == "polygon":
-            #     scaled_points = [(int(x), int(y)) for x, y in params["points"]]
-            #     pygame.draw.polygon(self.canvas_surface, params["color"], scaled_points)
+        for shape in self.shapes:            
             shape.render(self.canvas_surface)
 
     def update_canvas(self):

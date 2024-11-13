@@ -1,8 +1,10 @@
 import pygame
 import pygame_gui
+from pygame import gfxdraw
 import sys
 import numpy as np
 import ast
+from functools import partial
 
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0) 
@@ -74,44 +76,51 @@ class Polygon:
 
 
 class ZoomableCanvas:
-    def __init__(self, parent_surface, x, y, width, height, canvas_width, canvas_height, grid=True, grid_size=100, bg_color=WHITE, shapes=[]):
+    def __init__(self, parent_surface, x, y, width, height, canvas_width, canvas_height, scale=1, init_canvas=None, shapes=[]):
         self.parent_surface = parent_surface
         self.x = x
         self.y = y
         self.width = width
         self.height = height
         self.shapes = shapes
-        self.bg_color = bg_color
+        self.scale = scale
         self.canvas_width = canvas_width
         self.canvas_height = canvas_height
-        self.grid = grid
-        self.grid_size = grid_size        
+        if init_canvas is not None:
+            self.initialize_canvas = lambda: init_canvas(self)
+        else:
+            self.initialize_canvas = self.default_initialize_canvas
         # Create a canvas surface
         self.canvas_surface = pygame.Surface((canvas_width, canvas_height))
+        
         self.initialize_canvas()       
 
         # Zoom and pan variables
-        self.zoom = 1.0
-        self.offset_x, self.offset_y = 0, 0
+        self.init_zoom = height / canvas_height
+        self.zoom = self.init_zoom
+        self.offset_x, self.offset_y = int(canvas_width * 0.5), int(canvas_height * 0.5)
         self.panning = False
         self.moving_polygon = False
         self.resizing_polygon = False
         self.selected_polygon = None
         self.dragging_vertex = None
-        self.drag_start = (0, 0)        
-    
-    def initialize_canvas(self):
+        self.drag_start = (self.offset_x, self.offset_y)        
+
+
+    def default_initialize_canvas(self):
+        grid_size = 100
+        bg_color=(255, 255, 255)
         # Initialize canvas with background color, grid, and border
-        self.canvas_surface.fill(self.bg_color)
+        self.canvas_surface.fill(bg_color)
         pygame.draw.rect(self.canvas_surface, BLACK, pygame.Rect(0, 0, self.canvas_width, self.canvas_height), 2)
-        if self.grid:
-            canvas_dimension = np.array([self.canvas_width, self.canvas_height])
-            grid_line_num = np.array([int(self.canvas_width / self.grid_size) + 1, int(self.canvas_height / self.grid_size) + 1])
-            grid_line_start_pos = ((canvas_dimension - (grid_line_num - 1) * self.grid_size) * 0.5).astype(int)
-            for i in range(grid_line_num[0]):
-                pygame.draw.line(self.canvas_surface, BLACK, (grid_line_start_pos[0] + i * self.grid_size, 0), (grid_line_start_pos[0] + i * self.grid_size, canvas_dimension[1]), width=2)
-            for j in range(grid_line_num[1]):
-                pygame.draw.line(self.canvas_surface, BLACK, (0, grid_line_start_pos[1] + j * self.grid_size), (canvas_dimension[0], grid_line_start_pos[1] + j * self.grid_size), width=2)
+        # if self.grid:
+        canvas_dimension = np.array([self.canvas_width, self.canvas_height])
+        grid_line_num = np.array([int(self.canvas_width / grid_size) + 1, int(self.canvas_height / grid_size) + 1])
+        grid_line_start_pos = ((canvas_dimension - (grid_line_num - 1) * grid_size) * 0.5).astype(int)
+        for i in range(grid_line_num[0]):
+            pygame.draw.line(self.canvas_surface, BLACK, (grid_line_start_pos[0] + i * grid_size, 0), (grid_line_start_pos[0] + i * grid_size, canvas_dimension[1]), width=2)
+        for j in range(grid_line_num[1]):
+            pygame.draw.line(self.canvas_surface, BLACK, (0, grid_line_start_pos[1] + j * grid_size), (canvas_dimension[0], grid_line_start_pos[1] + j * grid_size), width=2)
             
     
     def in_canvas(self, pos):
@@ -133,7 +142,7 @@ class ZoomableCanvas:
 
             # print(f'zoom level {self.zoom} view area dimension: {int(self.width / self.zoom)}x{int(self.height / self.zoom)}, canvas dimension: {self.canvas_surface.get_width()}x{self.canvas_surface.get_height()}')
             # Limit zoom to reasonable levels
-            self.zoom = max(0.1, min(self.zoom, 5.0))
+            self.zoom = max(self.init_zoom, min(self.zoom, 5.0))
 
             mouse_x, mouse_y = pygame.mouse.get_pos()
             print(f'zoom level:{self.zoom}, mouse location: {mouse_x, mouse_y}')
@@ -219,7 +228,7 @@ class ZoomableCanvas:
         visible_surface = self.canvas_surface.subsurface(view_rect)
 
         # Scale the visible surface
-        scaled_surface = pygame.transform.scale(visible_surface, (
+        scaled_surface = pygame.transform.smoothscale(visible_surface, (
             int(view_rect.width * self.zoom),
             int(view_rect.height * self.zoom)
         ))
@@ -240,23 +249,29 @@ class ZoomableCanvas:
         self.draw_shapes()
 
 if __name__ == "__main__":
-    pygame.init()
-    screen = pygame.display.set_mode((1000, 600))
-    pygame.display.set_caption("Main Window with Zoomable Canvas and Buttons")
-    manager = pygame_gui.UIManager((1000, 600))
 
-    # Create ZoomableCanvas instance
-    canvas = ZoomableCanvas(screen, 200, 0, 800, 600, 1600, 1200)
-
-    # Create buttons using pygame_gui
-    polygon_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((10, 10), (150, 40)), text='Add Polygons', manager=manager)
-    output_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((10, 60), (150, 40)), text='Output Polygons', manager=manager)
-    dummy_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((10, 110), (150, 40)), text='Dummy', manager=manager)
-    
     def output_polygons(filename):
         with open(filename, 'w') as f:
             for p in canvas.shapes:                
                 f.write(f"Polygon Vertices: {p.vertices}\n")
+    class Init_Kspace:
+        def __init__(self, n1, n2) -> None:            
+            self.n1 = n1
+            self.n2 = n2
+            pass
+        def draw_kspace_circles(self, canvas, n1, n2):        
+            bg_color=(255, 255, 255) 
+            canvas.canvas_surface.fill(bg_color)
+            origin_x, origin_y = int(canvas.canvas_surface.width / 2), int(canvas.canvas_surface.height / 2)
+            pygame.draw.circle(canvas.canvas_surface, (0, 0, 0), (origin_x, origin_y), n1 * canvas.scale, 2)            
+            pygame.draw.circle(canvas.canvas_surface, (0, 0, 0), (origin_x, origin_y), n2 * canvas.scale, 2)
+            return        
+        def __call__(self, instance):
+            """Invoke the wrapped function with the given instance and stored parameters"""
+            print('init k-space plot')
+            self.draw_kspace_circles(instance, self.n1, self.n2)
+
+
 
     def read_file_as_lists(filename):
         polygons = []
@@ -270,6 +285,24 @@ if __name__ == "__main__":
                     polygon = Polygon(vertices)
                     polygons.append(polygon)
         return polygons
+
+
+    pygame.init()
+    screen = pygame.display.set_mode((1000, 600))
+    pygame.display.set_caption("Main Window with Zoomable Canvas and Buttons")
+    manager = pygame_gui.UIManager((1000, 600))
+
+    # Create ZoomableCanvas instance
+    # init_kspace_canvas = partial(init_kspace_canvas, n1=1.54, n2=2)
+    init_kspace = Init_Kspace(1, 2)
+    canvas = ZoomableCanvas(screen, 400, 0, 400, 400, 520, 520, scale=100, init_canvas=init_kspace)
+
+    # Create buttons using pygame_gui
+    polygon_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((10, 10), (150, 40)), text='Add Polygons', manager=manager)
+    output_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((10, 60), (150, 40)), text='Output Polygons', manager=manager)
+    dummy_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((10, 110), (150, 40)), text='Dummy', manager=manager)
+    
+
 
     clock = pygame.time.Clock()
 
@@ -289,6 +322,8 @@ if __name__ == "__main__":
                         output_polygons('polygon_layout.txt')
                         # canvas.add_shape("circle", color=BLUE, position=(800, 800), radius=50)
                     elif event.ui_element == dummy_button:
+                        init_kspace.n2 = 2.6
+                        canvas.update_canvas()
                         print("Button Rectangle clicked!")
                         # canvas.add_shape("rectangle", color=RED, rect=pygame.Rect(100, 100, 200, 100))
                     elif event.ui_element == polygon_button:

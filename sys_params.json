@@ -1,0 +1,42 @@
+[
+    {
+        "label": "Wavelength (R/G/B)",
+        "value": "650 / 550 / 450",
+        "static": false
+    },
+    {
+        "label": "Field of View (H/V)",
+        "value": "30 / 30",
+        "static": false
+    },
+    {
+        "label": "Diagonal FOV",
+        "value": "42.4264",
+        "static": false
+    },
+    {
+        "label": "Eye Relief (mm)",
+        "value": "15",
+        "static": false
+    },
+    {
+        "label": "Eyebox (W/H)",
+        "value": "20 / 20",
+        "static": false
+    },
+    {
+        "label": "OC Area (W/H)",
+        "value": "30 / 30",
+        "static": false
+    },
+    {
+        "label": "Substrate RI",
+        "value": "1.7",
+        "static": false
+    },
+    {
+        "label": "Ambient RI",
+        "value": "1",
+        "static": false
+    }
+]

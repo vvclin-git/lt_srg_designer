@@ -1,0 +1,17 @@
+[
+    {
+        "label": "Grating Pitch",
+        "value": "220.9468",
+        "static": false
+    },
+    {
+        "label": "Grating Vector Angle",
+        "value": "53.2507",
+        "static": false
+    },
+    {
+        "label": "Light Traversal Angle",
+        "value": "7.7432",
+        "static": false
+    }
+]

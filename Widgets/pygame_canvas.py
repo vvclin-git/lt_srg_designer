@@ -153,7 +153,7 @@ class ZoomableCanvas:
         if px_to_coord is not None:
             self.px_to_coord = px_to_coord
         else:
-            self.px_to_coord = lambda px_coord: px_coord
+            self.px_to_coord = lambda self, px_coord: px_coord
         
         # Create a canvas surface
         self.canvas_surface = pygame.Surface((canvas_width, canvas_height), pygame.SRCALPHA)
@@ -272,7 +272,7 @@ class ZoomableCanvas:
                     self.offset_y = min(max(self.offset_y, -(self.canvas_surface.get_height() * self.zoom - self.height) / self.zoom), 0)
                 
                 elif self.moving_polygon:
-                    dx, dy = (event.pos[0] - self.x - self.drag_start[0]), (event.pos[1] - self.y - self.drag_start[1])
+                    dx, dy = (event.pos[0] - self.x - self.drag_start[0]) / self.zoom, (event.pos[1] - self.y - self.drag_start[1] / self.zoom)
                     self.drag_start = ((event.pos[0] - self.x), (event.pos[1] - self.y))
                     self.selected_polygon.move_polygon((dx, dy))
                     self.update_canvas()
@@ -343,8 +343,9 @@ if __name__ == "__main__":
 
     def px_to_kspace(self, px_coords):
         canvas_center = np.array([self.offset_x, self.offset_y])
+        canvas_pos = np.array([self.x, self.y])
         kspace_coord = np.zeros_like(px_coords)
-        kspace_coord = px_coords - canvas_center
+        kspace_coord = px_coords - canvas_pos - canvas_center
         kspace_coord = kspace_coord / self.scale
         kspace_coord[1] = kspace_coord[1] * -1 
         return kspace_coord

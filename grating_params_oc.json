@@ -2,11 +2,13 @@
     {
         "label": "Grating Pitch",
         "value": "308.3817",
-        "static": false
+        "static": false,
+        "regex":"^[1-9]\\d*(\\.\\d+)?$"
     },
     {
         "label": "Grating Vector Angle",
         "value": "-172.2568",
-        "static": false
+        "static": false,
+        "regex": "^[-]?[1-9]\\d*(\\.\\d+)?$"
     }
 ]

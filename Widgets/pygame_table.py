@@ -1,6 +1,7 @@
 import pygame
 import pygame_gui
 import json
+import re
 import numpy as np
 from pygame_gui.elements import UIPanel, UILabel, UITextEntryLine, UIButton
 
@@ -13,7 +14,8 @@ class TableWidget:
         font_size = max((label_font_size, text_entry_font_size))
         self.row_height = round(font_size * 1.4) 
         self.manager = manager
-        
+        self.error_dialogue = None
+        self.last_valid_input = ''
         # Set up table data
         self.headers = headers
         self.data = data
@@ -63,17 +65,41 @@ class TableWidget:
         for entry, value in zip(self.data_value_fields, numpy_array):
             entry.set_text(str(value))
     
+    def test_regex(self, input_string, regex_pattern):        
+        return bool(re.fullmatch(regex_pattern, input_string))
+
     def handle_event(self, event):
         # Event handler that is triggered when events occur
         if event.type == pygame_gui.UI_TEXT_ENTRY_CHANGED:
             for i, text_entry in enumerate(self.data_value_fields):                
                 if event.ui_element == text_entry:
-                    self.on_text_input_finish(text_entry)
+                    regex_str = self.data[i]['regex']
+                    self.on_text_input_finish(text_entry, regex_str)
                     break
             self.data_values[i] = text_entry.get_text()
+        # if event.type == pygame_gui.UI_BUTTON_PRESSED and self.error_dialog is not None:
+        #     if event.ui_element.text == "Dismiss":
+        #         self.error_dialog.kill()
+        #         self.error_dialog = None  # Reset dialog tracking
 
-    def on_text_input_finish(self, text_entry):
-        # Event handler that is triggered when the text input is finished (enter pressed)
+    def on_text_input_finish(self, text_entry, regex_str):
+        input_text = text_entry.get_text()
+        if input_text.strip() == "":
+                print("Input is empty, waiting for user input...")
+        elif self.test_regex(input_text, regex_str):
+            # Valid input: Update the last valid input and print
+            self.last_valid_input = input_text
+            print(f"Valid input: {input_text}")
+        else:
+            # Invalid input: Revert to the last valid input
+            if self.error_dialogue is None:
+                self.error_dialogue = pygame_gui.windows.UIMessageWindow(
+                    rect=pygame.Rect((250, 200), (300, 150)),
+                    html_message=f'Invalid input: "{input_text}". Reverting to last valid input: "{self.last_valid_input}".',
+                    manager=self.manager,
+                    window_title='Input Error'
+                )
+            text_entry.set_text(self.last_valid_input)
         print("Text input finished: ", text_entry.get_text())
 
     def output_data(self):
@@ -95,18 +121,20 @@ if __name__ == "__main__":
 
     # Set up table data
     headers = ['Parameter', 'Value']
-    data = [
-    {'label': 'Scale', 'value': '0.5', 'static': False},
-    {'label': 'Pixel Number', 'value': '5x5', 'static': True},
-    {'label': 'Pixel Pitch', 'value': '60x60', 'static': True},
-    {'label': 'Pixel Size', 'value': '50x50', 'static': False},
-    {'label': 'Row Offset', 'value': '0', 'static': False},
-    {'label': 'Sub-pixel Pitch', 'value': '30x30', 'static': False},
-    {'label': 'Sub-pixel Size', 'value': '20x20', 'static': False},
-    {'label': 'Sub-pixel Padding', 'value': '0x0', 'static': False},
-    {'label': 'Sub-pixel Order', 'value': 'RG|BW', 'static': False}
-    ]
-
+    # data = [
+    # {'label': 'Scale', 'value': '0.5', 'static': False},
+    # {'label': 'Pixel Number', 'value': '5x5', 'static': True},
+    # {'label': 'Pixel Pitch', 'value': '60x60', 'static': True},
+    # {'label': 'Pixel Size', 'value': '50x50', 'static': False},
+    # {'label': 'Row Offset', 'value': '0', 'static': False},
+    # {'label': 'Sub-pixel Pitch', 'value': '30x30', 'static': False},
+    # {'label': 'Sub-pixel Size', 'value': '20x20', 'static': False},
+    # {'label': 'Sub-pixel Padding', 'value': '0x0', 'static': False},
+    # {'label': 'Sub-pixel Order', 'value': 'RG|BW', 'static': False}
+    # ]
+    with open('sys_params.json') as f:
+        data = json.load(f)
+    
 
     # Create table widget
     table_widget = TableWidget(pygame.Rect((15, 30), (470, 300)), headers=headers, data=data, label_ratio=0.5, gap_width=5, manager=gui_manager)
@@ -154,7 +182,7 @@ if __name__ == "__main__":
         gui_manager.update(time_delta)
 
         # Draw background
-        # window.fill((255, 255, 255))
+        window.fill((255, 255, 255))
 
         # Update GUI manager
         gui_manager.draw_ui(window)

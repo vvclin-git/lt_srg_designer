@@ -2,41 +2,50 @@
     {
         "label": "Wavelength (R/G/B)",
         "value": "650 / 550 / 450",
-        "static": false
+        "static": false,
+        "regex": "^[1-9]\\d*(\\.\\d+)?\\s*\\/\\s*[1-9]\\d*(\\.\\d+)?\\s*\\/\\s*[1-9]\\d*(\\.\\d+)?$"
     },
     {
         "label": "Field of View (H/V)",
         "value": "30 / 30",
-        "static": false
+        "static": false,
+        "regex":"^[1-9]\\d*(\\.\\d+)?\\s*\\/\\s*[1-9]\\d*(\\.\\d+)?$"
+
     },
     {
         "label": "Diagonal FOV",
         "value": "42.4264",
-        "static": false
+        "static": false,
+        "regex":"^[1-9]\\d*(\\.\\d+)?$"
     },
     {
         "label": "Eye Relief (mm)",
         "value": "15",
-        "static": false
+        "static": false,
+        "regex":"^[1-9]\\d*(\\.\\d+)?\\s*\\/\\s*[1-9]\\d*(\\.\\d+)?$"
     },
     {
         "label": "Eyebox (W/H)",
         "value": "20 / 20",
-        "static": false
+        "static": false,
+        "regex":"^[1-9]\\d*(\\.\\d+)?\\s*\\/\\s*[1-9]\\d*(\\.\\d+)?$"
     },
     {
         "label": "OC Area (W/H)",
         "value": "30 / 30",
-        "static": false
+        "static": false,
+        "regex":"^[1-9]\\d*(\\.\\d+)?\\s*\\/\\s*[1-9]\\d*(\\.\\d+)?$"
     },
     {
         "label": "Substrate RI",
         "value": "1.7",
-        "static": false
+        "static": false,
+        "regex":"^[1-9]\\d*(\\.\\d+)?$"
     },
     {
         "label": "Ambient RI",
         "value": "1",
-        "static": false
+        "static": false,
+        "regex":"^[1-9]\\d*(\\.\\d+)?$"
     }
 ]

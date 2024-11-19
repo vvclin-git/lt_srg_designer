@@ -2,16 +2,19 @@
     {
         "label": "Grating Pitch",
         "value": "220.9468",
-        "static": false
+        "static": false,
+        "regex":"^[1-9]\\d*(\\.\\d+)?$"
     },
     {
         "label": "Grating Vector Angle",
         "value": "53.2507",
-        "static": false
+        "static": false,
+        "regex": "^[-]?[1-9]\\d*(\\.\\d+)?$"
     },
     {
         "label": "Light Traversal Angle",
         "value": "7.7432",
-        "static": false
+        "static": false,
+        "regex": "^[-]?[1-9]\\d*(\\.\\d+)?$"
     }
 ]

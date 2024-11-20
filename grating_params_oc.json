@@ -1,13 +1,19 @@
 [
     {
         "label": "Grating Pitch",
-        "value": "308.3817",
+        "value": "366.6667",
         "static": false,
         "regex":"^[1-9]\\d*(\\.\\d+)?$"
     },
     {
+        "label": "FOV Center",
+        "value": "0, -1.5",
+        "static": false,
+        "regex": "^[-]?[1-9]\\d*(\\.\\d+)?\\s*,\\s*[+-]?[1-9]\\d*(\\.\\d+)?$"
+    },
+    {
         "label": "Grating Vector Angle",
-        "value": "-172.2568",
+        "value": "90",
         "static": false,
         "regex": "^[-]?[1-9]\\d*(\\.\\d+)?$"
     }

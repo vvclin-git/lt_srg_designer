@@ -1,19 +1,25 @@
 [
     {
         "label": "Grating Pitch",
-        "value": "309.6603",
+        "value": "366.6667",
         "static": false,
         "regex":"^[1-9]\\d*(\\.\\d+)?$"
     },
     {
+        "label": "FOV Center",
+        "value": "0, 0",
+        "static": false,
+        "regex": "^[-]?[1-9]\\d*(\\.\\d+)?\\s*,\\s*[+-]?[1-9]\\d*(\\.\\d+)?$"
+    },
+    {
         "label": "Grating Vector Angle",
-        "value": "-80.9995",
+        "value": "0",
         "static": false,
         "regex": "^[-]?[1-9]\\d*(\\.\\d+)?$"
     },
     {
         "label": "Light Traversal Angle",
-        "value": "-80.9995",
+        "value": "0",
         "static": false,
         "regex": "^[-]?[1-9]\\d*(\\.\\d+)?$"
     }

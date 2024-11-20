@@ -1,6 +1,5 @@
 import pygame
 import pygame_gui
-from pygame import gfxdraw
 import sys
 import numpy as np
 import ast
@@ -134,8 +133,11 @@ class KSpaceFOV(Polygon):
             # for vertex in self.vertices:
             #     pygame.draw.circle(screen, (255, 0, 0), (int(vertex[0]), int(vertex[1])), self.control_pt_size)  # Draw vertices as red dots
 
+
+
+
 class ZoomableCanvas:
-    def __init__(self, parent_surface, x, y, width, height, canvas_width, canvas_height, init_zoom_fit='height', scale=1, init_canvas=None, px_to_coord=None, shapes=[]):
+    def __init__(self, parent_surface, x, y, width, height, canvas_width, canvas_height, init_zoom_fit='width', scale=1, init_canvas=None, px_to_coord=None, shapes=[]):
         self.parent_surface = parent_surface
         self.x = x
         self.y = y
@@ -161,18 +163,60 @@ class ZoomableCanvas:
         self.initialize_canvas()       
 
         # Zoom and pan variables
-        if init_zoom_fit == 'height':
-            self.init_zoom = height / canvas_height
-        elif init_zoom_fit == 'width':
-            self.init_zoom = width / canvas_width
-        self.zoom = self.init_zoom
-        self.offset_x, self.offset_y = int(canvas_width * 0.5), int(canvas_height * 0.5)
+        # if init_zoom_fit == 'height':
+        #     self.init_zoom = height / canvas_height
+        # elif init_zoom_fit == 'width':
+        #     self.init_zoom = width / canvas_width
+        
+        self.zoom, self.offset_x, self.offset_y = self.calculate_zoom_and_shift(self.width, self.height, canvas_width, canvas_height)
+        # self.zoom = self.init_zoom
+        # self.offset_x, self.offset_y = int(canvas_width * 0.5), int(canvas_height * 0.5)
+        # self.offset_x, self.offset_y = 0, 0
         self.panning = False
         self.moving_polygon = False
         self.resizing_polygon = False
         self.selected_polygon = None
         self.dragging_vertex = None
         self.drag_start = (self.offset_x, self.offset_y)        
+
+    def calculate_zoom_and_shift(self, viewport_width, viewport_height, canvas_width, canvas_height):
+        """
+        Calculate the zoom coefficient and shift values to ensure the canvas fills 
+        the viewport and is centered within it.
+
+        Parameters:
+            viewport_width (float): Width of the viewport.
+            viewport_height (float): Height of the viewport.
+            canvas_width (float): Width of the canvas.
+            canvas_height (float): Height of the canvas.
+
+        Returns:
+            tuple: (zoom_coefficient, shift_x, shift_y)
+                zoom_coefficient (float): The appropriate zoom coefficient.
+                shift_x (float): Shift value in the x-direction.
+                shift_y (float): Shift value in the y-direction.
+        """
+        # Compute aspect ratios
+        viewport_aspect = viewport_width / viewport_height
+        canvas_aspect = canvas_width / canvas_height
+
+        # Determine zoom coefficient based on aspect ratio comparison
+        if viewport_aspect > canvas_aspect:
+            # Viewport is wider than canvas; fit height
+            zoom_coeff = viewport_height / canvas_height
+        else:
+            # Viewport is taller than canvas; fit width
+            zoom_coeff = viewport_width / canvas_width
+
+        # Calculate scaled canvas dimensions
+        scaled_canvas_width = canvas_width * zoom_coeff
+        scaled_canvas_height = canvas_height * zoom_coeff
+
+        # Compute shifts to center the canvas
+        shift_x = int((viewport_width - scaled_canvas_width) / 2)
+        shift_y = int((viewport_height - scaled_canvas_height) / 2)
+
+        return zoom_coeff, shift_x, shift_y
 
 
     def default_initialize_canvas(self):
@@ -199,12 +243,13 @@ class ZoomableCanvas:
 
     def handle_event(self, event):
         if self.in_canvas(pygame.mouse.get_pos()):
-            print(self.px_to_coord(self, pygame.mouse.get_pos()))
+            # print(self.px_to_coord(self, pygame.mouse.get_pos()))
             if event.type == pygame.MOUSEWHEEL:
                 old_zoom = self.zoom
                 if event.y > 0:  # Zoom in
                     self.zoom *= 1.1                
                 elif event.y < 0:  # Zoom out
+                    print(f'zoom out')
                     if  int(self.width / self.zoom * 1.1) > self.canvas_surface.get_width() and int(self.height / self.zoom * 1.1) > self.canvas_surface.get_height():
                         self.zoom = self.width / self.canvas_surface.get_width()
                     else:
@@ -226,21 +271,18 @@ class ZoomableCanvas:
                 self.offset_y = min(max(self.offset_y, -(self.canvas_surface.get_height() * self.zoom - self.height) / self.zoom), 0)
 
             # Handle mouse button down for dragging or selecting shapes
-            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                # if event.button == 1:  # Left mouse button
-                # if self.in_canvas(event.pos):                
-                # Check if a shape is being clicked for selection
-                mouse_x, mouse_y = (event.pos[0] - self.x - self.offset_x) / self.zoom, (event.pos[1] - self.y - self.offset_y) / self.zoom
-                print(f'cursor location:{mouse_x}, {mouse_y}', end='')
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:                
+                mouse_x, mouse_y = (event.pos[0] - self.x - self.offset_x) / self.zoom, (event.pos[1] - self.y - self.offset_y) / self.zoom # real world pixel coord
+                print(f'cursor location:{mouse_x}, {mouse_y}, ', end='')
                 for shape in self.shapes:
-                    self.dragging_vertex = shape.get_closest_vertex((mouse_x, mouse_y))
-                    
+                    self.dragging_vertex = shape.get_closest_vertex((mouse_x, mouse_y))                    
                     if  self.dragging_vertex is not None:
                         self.resizing_polygon = True
                         self.selected_polygon = shape
                         return
                     if shape.point_in_polygon((mouse_x, mouse_y)):                        
                         self.drag_start = ((event.pos[0] - self.x), (event.pos[1] - self.y))
+                        print(f'shape clicked, drag started at: {self.drag_start[0]}, {self.drag_start[1]}')
                         self.moving_polygon = True
                         self.selected_polygon = shape
                         return
@@ -272,8 +314,9 @@ class ZoomableCanvas:
                     self.offset_y = min(max(self.offset_y, -(self.canvas_surface.get_height() * self.zoom - self.height) / self.zoom), 0)
                 
                 elif self.moving_polygon:
-                    dx, dy = (event.pos[0] - self.x - self.drag_start[0]) / self.zoom, (event.pos[1] - self.y - self.drag_start[1] / self.zoom)
+                    dx, dy = (event.pos[0] - self.x - self.drag_start[0]) / self.zoom, (event.pos[1] - self.y - self.drag_start[1]) / self.zoom
                     self.drag_start = ((event.pos[0] - self.x), (event.pos[1] - self.y))
+                    print(f'moving polygon with displacement of {dx}, {dy}')
                     self.selected_polygon.move_polygon((dx, dy))
                     self.update_canvas()
                     
@@ -284,25 +327,33 @@ class ZoomableCanvas:
     
     def draw(self):
         # Calculate the viewable area of the canvas
+        # view_rect = pygame.Rect(
+        #     -self.offset_x / self.zoom,
+        #     -self.offset_y / self.zoom,
+        #     min(self.width / self.zoom, self.canvas_surface.get_width()),
+        #     min(self.height / self.zoom, self.canvas_surface.get_height())
+        # )        
         view_rect = pygame.Rect(
             -self.offset_x / self.zoom,
             -self.offset_y / self.zoom,
-            min(self.width / self.zoom, self.canvas_surface.get_width()),
-            min(self.height / self.zoom, self.canvas_surface.get_height())
-        )
+            int(self.width / self.zoom), int(self.height / self.zoom))
 
         # Ensure the view_rect is within the bounds of the canvas surface
         view_rect.clamp_ip(pygame.Rect(0, 0, self.canvas_surface.get_width(), self.canvas_surface.get_height()))
 
         # Clip the canvas to the viewable area
+        # visible_surface = self.canvas_surface.subsurface(view_rect)
         visible_surface = self.canvas_surface.subsurface(view_rect)
 
         # Scale the visible surface
         scaled_surface = pygame.transform.smoothscale(visible_surface, (
-            int(view_rect.width * self.zoom),
-            int(view_rect.height * self.zoom)
+            self.width,
+            self.height
         ))
-
+        # scaled_surface = pygame.transform.smoothscale(visible_surface, (
+        #     int(view_rect.width * self.zoom),
+        #     int(view_rect.height * self.zoom)
+        # ))
         # Blit the scaled portion of the canvas onto the parent surface
         self.parent_surface.blit(scaled_surface, (self.x, self.y))
 
@@ -371,8 +422,10 @@ if __name__ == "__main__":
 
     # Create ZoomableCanvas instance
     # init_kspace_canvas = partial(init_kspace_canvas, n1=1.54, n2=2)
-    init_kspace = Init_Kspace(1, 2)
-    canvas = ZoomableCanvas(screen, 400, 0, 400, 400, 400, 400, scale=100, init_canvas=init_kspace, px_to_coord=px_to_kspace)
+    # init_kspace = Init_Kspace(1, 2)
+    # canvas = ZoomableCanvas(screen, 400, 0, 400, 400, 400, 400, scale=100, init_canvas=init_kspace, px_to_coord=px_to_kspace)
+    pos_to_px = lambda self, coord: (coord - np.array([self.x, self.y]) - np.array([self.offset_x, self.offset_y])) / self.zoom
+    canvas = ZoomableCanvas(screen, 210, 0, 700, 600, 2000, 2000, scale=1, px_to_coord=pos_to_px)
 
     # Create buttons using pygame_gui
     polygon_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((10, 10), (150, 40)), text='Add Polygons', manager=manager)
@@ -406,16 +459,16 @@ if __name__ == "__main__":
                         # canvas.add_shape("rectangle", color=RED, rect=pygame.Rect(100, 100, 200, 100))
                     elif event.ui_element == polygon_button:
                         print("Button Polygon clicked!")
-                        fov_red = KSpaceFOV(canvas, (0, 0), 30, 30, 0.5, (255, 0, 0, 128))
-                        fov_green = KSpaceFOV(canvas, (1.5, 0), 30, 30, 0.15, (0, 255, 0, 128))
-                        fov_blue = KSpaceFOV(canvas, (0, -1.5), 30, 30, 0.01, (0, 0, 255, 128))
-                        canvas.add_shape(fov_red)
-                        canvas.add_shape(fov_green)
-                        canvas.add_shape(fov_blue)
+                        # fov_red = KSpaceFOV(canvas, (0, 0), 30, 30, 0.5, (255, 0, 0, 128))
+                        # fov_green = KSpaceFOV(canvas, (1.5, 0), 30, 30, 0.15, (0, 255, 0, 128))
+                        # fov_blue = KSpaceFOV(canvas, (0, -1.5), 30, 30, 0.01, (0, 0, 255, 128))
+                        # canvas.add_shape(fov_red)
+                        # canvas.add_shape(fov_green)
+                        # canvas.add_shape(fov_blue)
                         
-                        # polygons = read_file_as_lists('polygon_layout.txt')
-                        # for p in polygons:
-                        #     canvas.add_shape(p)
+                        polygons = read_file_as_lists('polygon_layout.txt')
+                        for p in polygons:
+                            canvas.add_shape(p)
 
             # Pass events to manager and canvas
             manager.process_events(event)

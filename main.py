@@ -165,7 +165,7 @@ k_space_map_label = pygame_gui.elements.UILabel(
 )
 k_space_rect = pygame.Rect(k_space_map_label.rect.topleft[0], k_space_map_label.rect.topleft[1] + k_space_map_label.rect.height + GAP, KSPACE_MAP_WIDTH - 2 * GAP, KSPACE_MAP_WIDTH - 2 * GAP)
 init_kspace = Init_Kspace(1, 2)
-k_space_canvas = ZoomableCanvas(window_surface, k_space_rect.x, k_space_rect.y, k_space_rect.width, k_space_rect.height, 520, 520, 'width', 100, init_kspace, px_to_kspace)
+k_space_canvas = ZoomableCanvas(window_surface, k_space_rect.x, k_space_rect.y, k_space_rect.width, k_space_rect.height, 800, 800, 200, init_kspace, px_to_kspace)
 
 
 layout_view_panel = pygame_gui.elements.UIPanel(
@@ -181,8 +181,9 @@ layout_view_label = pygame_gui.elements.UILabel(
     container=layout_view_panel
 )
 
-layout_view_rect = pygame.Rect(layout_view_label.rect.topleft[0], layout_view_label.rect.topleft[1] + layout_view_label.rect.height + GAP, LAYOUT_WIDTH - 2 * GAP, WINDOW_HEIGHT - PARAMS_HEIGHT - 3 * GAP)
-layout_view_canvas = ZoomableCanvas(window_surface, layout_view_rect.x, layout_view_rect.y, layout_view_rect.width, layout_view_rect.height, 4000, 2000, 'width', 1000, px_to_coord=px_to_layout)
+# layout_view_rect = pygame.Rect(layout_view_label.rect.topleft[0], layout_view_label.rect.topleft[1] + layout_view_label.rect.height + GAP, LAYOUT_WIDTH - 2 * GAP, WINDOW_HEIGHT - PARAMS_HEIGHT - 3 * GAP)
+layout_view_rect = pygame.Rect(layout_view_label.rect.topleft[0], layout_view_label.rect.topleft[1] + layout_view_label.rect.height + GAP, LAYOUT_WIDTH - 2 * GAP, layout_view_panel.rect.height - layout_view_label.rect.height - 3 * GAP)
+layout_view_canvas = ZoomableCanvas(window_surface, layout_view_rect.x, layout_view_rect.y, layout_view_rect.width, layout_view_rect.height, 4000, 2000, 1000, px_to_coord=px_to_layout)
 
 # Run the game loop
 clock = pygame.time.Clock()

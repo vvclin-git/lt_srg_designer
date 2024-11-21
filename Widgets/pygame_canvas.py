@@ -87,8 +87,8 @@ class KSpaceFOV(Polygon):
         self.scale = kspace_canvas.scale
         vertices_px = vertices * kspace_canvas.scale
         vertices_px[:, 1] *= -1
-        kspace_canvas_center = np.array([kspace_canvas.offset_x, kspace_canvas.offset_y])
-        vertices_px += kspace_canvas_center
+        self.kspace_canvas_center = kspace_canvas.center
+        vertices_px += self.kspace_canvas_center
         super().__init__(vertices_px)
         self.color = color
     
@@ -137,7 +137,7 @@ class KSpaceFOV(Polygon):
 
 
 class ZoomableCanvas:
-    def __init__(self, parent_surface, x, y, width, height, canvas_width, canvas_height, init_zoom_fit='width', scale=1, init_canvas=None, px_to_coord=None, shapes=[]):
+    def __init__(self, parent_surface, x, y, width, height, canvas_width, canvas_height, scale=1, init_canvas=None, px_to_coord=None, shapes=[]):
         self.parent_surface = parent_surface
         self.x = x
         self.y = y
@@ -147,6 +147,7 @@ class ZoomableCanvas:
         self.scale = scale
         self.canvas_width = canvas_width
         self.canvas_height = canvas_height
+        self.center = np.array((int(self.canvas_width / 2), int(self.canvas_height / 2)))
         if init_canvas is not None:
             self.initialize_canvas = lambda: init_canvas(self)
         else:
@@ -168,8 +169,8 @@ class ZoomableCanvas:
         # elif init_zoom_fit == 'width':
         #     self.init_zoom = width / canvas_width
         
-        self.zoom, self.offset_x, self.offset_y = self.calculate_zoom_and_shift(self.width, self.height, canvas_width, canvas_height)
-        # self.zoom = self.init_zoom
+        self.init_zoom, self.offset_x, self.offset_y = self.calculate_zoom_and_shift(self.width, self.height, canvas_width, canvas_height)
+        self.zoom = self.init_zoom
         # self.offset_x, self.offset_y = int(canvas_width * 0.5), int(canvas_height * 0.5)
         # self.offset_x, self.offset_y = 0, 0
         self.panning = False
@@ -202,11 +203,11 @@ class ZoomableCanvas:
 
         # Determine zoom coefficient based on aspect ratio comparison
         if viewport_aspect > canvas_aspect:
-            # Viewport is wider than canvas; fit height
-            zoom_coeff = viewport_height / canvas_height
-        else:
-            # Viewport is taller than canvas; fit width
+            # If the viewport is wider than the canvas, scale based on width to fit horizontally
             zoom_coeff = viewport_width / canvas_width
+        else:
+            # If the viewport is taller than the canvas, scale based on height to fit vertically
+            zoom_coeff = viewport_height / canvas_height
 
         # Calculate scaled canvas dimensions
         scaled_canvas_width = canvas_width * zoom_coeff
@@ -310,8 +311,8 @@ class ZoomableCanvas:
                     self.offset_y += dy / self.zoom
                     self.drag_start = ((event.pos[0] - self.x), (event.pos[1] - self.y))
                     print(f'drag started at: {self.drag_start[0]}, {self.drag_start[1]}, offset: {dx}, {dy}')
-                    self.offset_x = min(max(self.offset_x, -(self.canvas_surface.get_width() * self.zoom - self.width) / self.zoom), 0)
-                    self.offset_y = min(max(self.offset_y, -(self.canvas_surface.get_height() * self.zoom - self.height) / self.zoom), 0)
+                    # self.offset_x = min(max(self.offset_x, -(self.canvas_surface.get_width() * self.zoom - self.width) / self.zoom), 0)
+                    # self.offset_y = min(max(self.offset_y, -(self.canvas_surface.get_height() * self.zoom - self.height) / self.zoom), 0)
                 
                 elif self.moving_polygon:
                     dx, dy = (event.pos[0] - self.x - self.drag_start[0]) / self.zoom, (event.pos[1] - self.y - self.drag_start[1]) / self.zoom
@@ -421,11 +422,14 @@ if __name__ == "__main__":
     manager = pygame_gui.UIManager((1000, 600))
 
     # Create ZoomableCanvas instance
-    # init_kspace_canvas = partial(init_kspace_canvas, n1=1.54, n2=2)
-    # init_kspace = Init_Kspace(1, 2)
-    # canvas = ZoomableCanvas(screen, 400, 0, 400, 400, 400, 400, scale=100, init_canvas=init_kspace, px_to_coord=px_to_kspace)
-    pos_to_px = lambda self, coord: (coord - np.array([self.x, self.y]) - np.array([self.offset_x, self.offset_y])) / self.zoom
-    canvas = ZoomableCanvas(screen, 210, 0, 700, 600, 2000, 2000, scale=1, px_to_coord=pos_to_px)
+    
+    # k-space test case
+    init_kspace = Init_Kspace(1, 2)
+    canvas = ZoomableCanvas(screen, 400, 0, 400, 400, 400, 400, scale=100, init_canvas=init_kspace, px_to_coord=px_to_kspace)
+    
+    # layout test case
+    # pos_to_px = lambda self, coord: (coord - np.array([self.x, self.y]) - np.array([self.offset_x, self.offset_y])) / self.zoom
+    # canvas = ZoomableCanvas(screen, 210, 0, 700, 600, 2000, 2000, scale=1, px_to_coord=pos_to_px)
 
     # Create buttons using pygame_gui
     polygon_button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((10, 10), (150, 40)), text='Add Polygons', manager=manager)
@@ -459,12 +463,12 @@ if __name__ == "__main__":
                         # canvas.add_shape("rectangle", color=RED, rect=pygame.Rect(100, 100, 200, 100))
                     elif event.ui_element == polygon_button:
                         print("Button Polygon clicked!")
-                        # fov_red = KSpaceFOV(canvas, (0, 0), 30, 30, 0.5, (255, 0, 0, 128))
-                        # fov_green = KSpaceFOV(canvas, (1.5, 0), 30, 30, 0.15, (0, 255, 0, 128))
-                        # fov_blue = KSpaceFOV(canvas, (0, -1.5), 30, 30, 0.01, (0, 0, 255, 128))
-                        # canvas.add_shape(fov_red)
-                        # canvas.add_shape(fov_green)
-                        # canvas.add_shape(fov_blue)
+                        fov_red = KSpaceFOV(canvas, (0, 0), 30, 30, 0.5, (255, 0, 0, 128))
+                        fov_green = KSpaceFOV(canvas, (1.5, 0), 30, 30, 0.15, (0, 255, 0, 128))
+                        fov_blue = KSpaceFOV(canvas, (0, -1.5), 30, 30, 0.01, (0, 0, 255, 128))
+                        canvas.add_shape(fov_red)
+                        canvas.add_shape(fov_green)
+                        canvas.add_shape(fov_blue)
                         
                         polygons = read_file_as_lists('polygon_layout.txt')
                         for p in polygons:

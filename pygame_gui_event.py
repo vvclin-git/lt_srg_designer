@@ -1,110 +1,98 @@
 import pygame
 import pygame_gui
 
-class EventInterceptor:
-    def __init__(self):
-        # Store handlers for UI elements by their `object_id`
-        self.ui_handlers = {}
-        # Custom event handlers for canvas and shapes
-        self.custom_handlers = []
-
-    def add_handler(self, ui_object_id, handler, event_type=None):
-        """Associate a UI element (identified by `object_id`) with a handler."""
-        if event_type:
-            self.ui_handlers.setdefault(event_type, {})[ui_object_id] = handler
-        else:
-            self.ui_handlers.setdefault(None, {})[ui_object_id] = handler
-
-    def add_custom_handler(self, handler):
-        """Add custom handler for non-standard UI elements."""
-        self.custom_handlers.append(handler)
-
-    def handle_event(self, event):
-        """Intercept and handle events."""
-        # Handle pygame_gui events
-        if hasattr(event, 'ui_element'):
-            ui_element = event.ui_element
-            ui_object_id = ui_element.object_ids[0] if ui_element.object_ids else None
-            event_handlers = self.ui_handlers.get(event.type, {}) or self.ui_handlers.get(None, {})
-            handler = event_handlers.get(ui_object_id)
-            if handler:
-                handler(event)
-
-        # Handle custom events
-        for custom_handler in self.custom_handlers:
-            custom_handler(event)
-
-# Initialize pygame and pygame_gui
 pygame.init()
-screen = pygame.display.set_mode((800, 600))
-manager = pygame_gui.UIManager((800, 600))
 
-# Add UI elements
-text_input = pygame_gui.elements.UITextEntryLine(relative_rect=pygame.Rect((100, 100), (200, 50)),
-                                                  manager=manager,
-                                                  object_id='#text_input')
+# Set up the display
+pygame.display.set_caption('UI Elements Separated by Object ID')
+window_surface = pygame.display.set_mode((800, 600))
 
-button = pygame_gui.elements.UIButton(relative_rect=pygame.Rect((100, 200), (100, 50)),
-                                       text='Button',
-                                       manager=manager,
-                                       object_id='#button')
+# Create the UI manager
+ui_manager = pygame_gui.UIManager((800, 600))
 
-# Custom Canvas (pygame surface)
-canvas = pygame.Surface((300, 300))
-canvas_rect = canvas.get_rect(topleft=(400, 100))
+# Create UI elements for Group A
+button_A = pygame_gui.elements.UIButton(
+    relative_rect=pygame.Rect((50, 50), (100, 50)),
+    text='Button A',
+    manager=ui_manager,
+    object_id="A"
+)
 
-# Draw shapes on canvas
-shapes = [
-    pygame.Rect(50, 50, 100, 100),  # Example rectangle
-]
+dropdown_A = pygame_gui.elements.UIDropDownMenu(
+    options_list=["Option A1", "Option A2", "Option A3"],
+    starting_option="Option A1",
+    relative_rect=pygame.Rect((200, 50), (200, 50)),
+    manager=ui_manager,
+    object_id="A"
+)
 
-# Define handlers
-def handle_text_input(event):
-    if event.type == pygame_gui.UI_TEXT_ENTRY_FINISHED:
-        print(f"Text input submitted: {event.text}")
+slider_A = pygame_gui.elements.UIHorizontalSlider(
+    relative_rect=pygame.Rect((50, 150), (300, 50)),
+    start_value=50,
+    value_range=(0, 100),
+    manager=ui_manager,
+    object_id="A"
+)
 
-def handle_button_click(event):
-    print("Button clicked!")
+# Create UI elements for Group B
+button_B = pygame_gui.elements.UIButton(
+    relative_rect=pygame.Rect((50, 250), (100, 50)),
+    text='Button B',
+    manager=ui_manager,
+    object_id="B"
+)
 
-def handle_canvas_click(event):
-    if event.type == pygame.MOUSEBUTTONDOWN:
-        mouse_pos = event.pos
-        for shape in shapes:
-            shape_global_pos = shape.move(canvas_rect.topleft)
-            if shape_global_pos.collidepoint(mouse_pos):
-                print(f"Clicked on shape at {shape.topleft}")
+dropdown_B = pygame_gui.elements.UIDropDownMenu(
+    options_list=["Option B1", "Option B2", "Option B3"],
+    starting_option="Option B1",
+    relative_rect=pygame.Rect((200, 250), (200, 50)),
+    manager=ui_manager,
+    object_id="B"
+)
 
-# Create and configure EventInterceptor
-interceptor = EventInterceptor()
-interceptor.add_handler('#text_input', handle_text_input, pygame_gui.UI_TEXT_ENTRY_FINISHED)
-interceptor.add_handler('#button', handle_button_click, pygame_gui.UI_BUTTON_PRESSED)
-interceptor.add_custom_handler(handle_canvas_click)
+slider_B = pygame_gui.elements.UIHorizontalSlider(
+    relative_rect=pygame.Rect((50, 350), (300, 50)),
+    start_value=30,
+    value_range=(0, 100),
+    manager=ui_manager,
+    object_id="B"
+)
 
-# Main loop
 clock = pygame.time.Clock()
-running = True
+is_running = True
 
-while running:
+while is_running:
     time_delta = clock.tick(60) / 1000.0
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            running = False
-        # Pass the event to the EventInterceptor
-        interceptor.handle_event(event)
-        # Pass the event to pygame_gui for processing
-        manager.process_events(event)
+            is_running = False
+        
+        # Handle all pygame.USEREVENTs dynamically
+        if event.type == pygame.USEREVENT:
+            if hasattr(event, 'ui_element'):
+                if event.ui_element is not None and hasattr(event.ui_element, 'object_id'):
+                    object_id = event.ui_element.object_id
+                    print(f"Event from Object ID: {object_id}")
+                    print(f"Triggered by element: {event.ui_element}")
+                    print(f"Event Details: {event.__dict__}")
+                    
+                    # Handle Group A events
+                    if object_id == "A":
+                        print("This event belongs to Group A.")
+                    
+                    # Handle Group B events
+                    elif object_id == "B":
+                        print("This event belongs to Group B.")
+        
+        # Pass the event to the UI manager
+        ui_manager.process_events(event)
 
-    # Update and draw UI
-    manager.update(time_delta)
-    screen.fill((0, 0, 0))
+    # Update the UI
+    ui_manager.update(time_delta)
 
-    # Draw canvas and shapes
-    screen.blit(canvas, canvas_rect.topleft)
-    for shape in shapes:
-        pygame.draw.rect(canvas, (255, 0, 0), shape)
-
-    # Draw UI elements
-    manager.draw_ui(screen)
+    # Draw the UI
+    window_surface.fill((0, 0, 0))  # Clear the screen
+    ui_manager.draw_ui(window_surface)
 
     pygame.display.update()
 

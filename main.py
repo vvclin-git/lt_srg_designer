@@ -25,6 +25,8 @@ class Init_Kspace:
         print('init k-space plot')
         self.draw_kspace_circles(instance, self.n1, self.n2)
 
+
+
 # class DOE:
 #     def __init__(self, fov_in, fov_out, grating_table) -> None:
 #         self.fov_in = fov_in

@@ -6,7 +6,7 @@ import numpy as np
 from pygame_gui.elements import UIPanel, UILabel, UITextEntryLine, UIButton
 
 class TableWidget:
-    def __init__(self, parent_rect, manager, headers, data, label_ratio=0.4, gap_width=10):
+    def __init__(self, parent_rect, manager, headers, data, label_ratio=0.4, gap_width=10, connected_objs=[]):
 
         theme = manager.ui_theme        
         label_font_size = theme.ui_element_fonts_info['label']['en']['size'] 
@@ -16,9 +16,11 @@ class TableWidget:
         self.manager = manager
         self.error_dialogue = None
         self.last_valid_input = ''
+        self.connected_objs = connected_objs
         # Set up table data
         self.headers = headers
         self.data = data
+
 
         # Create a panel to hold the table, panel size depends on parent rect
         panel_width = parent_rect.width
@@ -76,7 +78,9 @@ class TableWidget:
                     regex_str = self.data[i]['regex']
                     self.on_text_input_finish(text_entry, regex_str)
                     break
-            self.data_values[i] = text_entry.get_text()
+            self.data_values[i] = text_entry.get_text()            
+            for c in self.connected_objs:
+                c.update(self.data_values)
         # if event.type == pygame_gui.UI_BUTTON_PRESSED and self.error_dialog is not None:
         #     if event.ui_element.text == "Dismiss":
         #         self.error_dialog.kill()
@@ -101,6 +105,9 @@ class TableWidget:
                 )
             text_entry.set_text(self.last_valid_input)
         print("Text input finished: ", text_entry.get_text())
+
+    def update(self):
+        self.load_data(self.data_values)
 
     def output_data(self):
         # values = [data_value.get_text() for data_value in self.data_values]        
@@ -160,7 +167,9 @@ if __name__ == "__main__":
                 if event.ui_element == load_button:
                     try:
                         test_data = np.array(['1.0', '5x5', '60x60', '50x50', '0', '30x30', '20x20', '0x0', 'RG|BW'])
-                        table_widget.load_data(test_data)
+                        table_widget.data_values = test_data
+                        table_widget.update()
+                        # table_widget.load_data(test_data)
                     except ValueError as e:
                         print(e)
                 elif event.ui_element == output_button:

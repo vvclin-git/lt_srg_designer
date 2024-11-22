@@ -25,6 +25,26 @@ class Init_Kspace:
         print('init k-space plot')
         self.draw_kspace_circles(instance, self.n1, self.n2)
 
+# class DOE:
+#     def __init__(self, fov_in, fov_out, grating_table) -> None:
+#         self.fov_in = fov_in
+#         self.fov_out = fov_out
+#         self.grating_table = grating_table
+#         pass
+    
+#     def calculate_angle(start, end):        
+#         # Calculate the vector components
+#         vector = np.array(end) - np.array(start)        
+#         # Calculate the angle in radians relative to the positive y-axis
+#         angle_radians = np.arctan2(vector[0], vector[1])  # x first, y second        
+#         # Convert the angle to degrees
+#         angle_degrees = np.degrees(angle_radians)        
+#         # Normalize the angle to the range [0, 360)
+#         return angle_degrees % 360
+    
+#     def update(self):
+#         self.grating_table.data_values[0] = self.fov_in.wavelength / np.linalg.norm(self.fov_out.center - self.fov_in.center)
+#         self.grating_table.data_values[1] = self.calculate_angle(self.fov_in.center, self.fov_out.center)
 
 # pixel coordinate conversion helper functions
 def px_to_kspace(self, px_coords):
@@ -193,23 +213,23 @@ while is_running:
     time_delta = clock.tick(60) / 1000.0
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
+            pygame.quit()
             is_running = False
 
         manager.process_events(event)
 
+        k_space_canvas.handle_event(event)
+        layout_view_canvas.handle_event(event)
+        sys_params_table.handle_event(event)
+        grating_params_ic_table.handle_event(event)
+        grating_params_epe_table.handle_event(event)
+        grating_params_oc_table.handle_event(event)
+
     manager.update(time_delta)
-
     window_surface.fill((255, 255, 255))
-    k_space_canvas.handle_event(event)
-    layout_view_canvas.handle_event(event)
-    sys_params_table.handle_event(event)
-    grating_params_ic_table.handle_event(event)
-    grating_params_epe_table.handle_event(event)
-    grating_params_oc_table.handle_event(event)
-
     manager.draw_ui(window_surface)
     k_space_canvas.draw()
     layout_view_canvas.draw()
     pygame.display.update()
 
-pygame.quit()
+

@@ -6,7 +6,7 @@ import numpy as np
 from pygame_gui.elements import UIPanel, UILabel, UITextEntryLine, UIButton
 
 class TableWidget:
-    def __init__(self, parent_rect, manager, headers, data, label_ratio=0.4, gap_width=10, connected_objs=[]):
+    def __init__(self, parent_rect, manager, headers, data, label_ratio=0.4, gap_width=10, connected_objs=[], object_id=''):
 
         theme = manager.ui_theme        
         label_font_size = theme.ui_element_fonts_info['label']['en']['size'] 
@@ -54,7 +54,7 @@ class TableWidget:
                 data_static = UILabel(relative_rect=pygame.Rect((x_offset + label_width + gap_width, y_offset), (editable_width, self.row_height)), text=row['value'], manager=self.manager, container=self.panel, anchors={'left': 'left'})
                 self.data_value_fields.append(data_static)                
             else:
-                data_entry = UITextEntryLine(relative_rect=pygame.Rect((x_offset + label_width + gap_width, y_offset), (editable_width, self.row_height)), manager=self.manager, container=self.panel, anchors={'left': 'left'})                        
+                data_entry = UITextEntryLine(relative_rect=pygame.Rect((x_offset + label_width + gap_width, y_offset), (editable_width, self.row_height)), manager=self.manager, container=self.panel, anchors={'left': 'left'}, object_id=object_id)                        
                 data_entry.set_text(row['value']) 
                 self.data_value_fields.append(data_entry)
             

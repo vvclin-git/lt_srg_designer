@@ -144,7 +144,7 @@ class KSpaceFOV(Polygon):
 
 
 class ZoomableCanvas:
-    def __init__(self, parent_surface, x, y, width, height, canvas_width, canvas_height, scale=1, init_canvas=None, px_to_coord=None, shapes=[]):
+    def __init__(self, parent_surface, x, y, width, height, canvas_width, canvas_height, scale=1, init_canvas=None, px_to_coord=None, shapes=[], object_id=''):
         self.parent_surface = parent_surface
         self.x = x
         self.y = y
@@ -155,6 +155,7 @@ class ZoomableCanvas:
         self.canvas_width = canvas_width
         self.canvas_height = canvas_height
         self.center = np.array((int(self.canvas_width / 2), int(self.canvas_height / 2)))
+        self.object_id = object_id
         if init_canvas is not None:
             self.initialize_canvas = lambda: init_canvas(self)
         else:

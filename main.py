@@ -25,28 +25,54 @@ class Init_Kspace:
         print('init k-space plot')
         self.draw_kspace_circles(instance, self.n1, self.n2)
 
-
-
-# class DOE:
-#     def __init__(self, fov_in, fov_out, grating_table) -> None:
-#         self.fov_in = fov_in
-#         self.fov_out = fov_out
-#         self.grating_table = grating_table
+# class LT_SRG_Designer:
+#     def __init__(self):
 #         pass
+
+class DOE:
+    def __init__(self, fov_in, fov_out, grating_table) -> None:
+        self.fov_in = fov_in
+        self.fov_out = fov_out
+        self.grating_table = grating_table
+        pass
     
-#     def calculate_angle(start, end):        
-#         # Calculate the vector components
-#         vector = np.array(end) - np.array(start)        
-#         # Calculate the angle in radians relative to the positive y-axis
-#         angle_radians = np.arctan2(vector[0], vector[1])  # x first, y second        
-#         # Convert the angle to degrees
-#         angle_degrees = np.degrees(angle_radians)        
-#         # Normalize the angle to the range [0, 360)
-#         return angle_degrees % 360
+    def calculate_angle(start, end):        
+        # Calculate the vector components
+        vector = np.array(end) - np.array(start)        
+        # Calculate the angle in radians relative to the positive y-axis
+        angle_radians = np.arctan2(vector[0], vector[1])  # x first, y second        
+        # Convert the angle to degrees
+        angle_degrees = np.degrees(angle_radians)        
+        # Normalize the angle to the range [0, 360)
+        return angle_degrees % 360
     
-#     def update(self):
-#         self.grating_table.data_values[0] = self.fov_in.wavelength / np.linalg.norm(self.fov_out.center - self.fov_in.center)
-#         self.grating_table.data_values[1] = self.calculate_angle(self.fov_in.center, self.fov_out.center)
+    def handle_event(self, event):
+         # Handle all pygame.USEREVENTs dynamically
+        if event.type == pygame.USEREVENT:
+            if hasattr(event, 'ui_element'):
+                if event.ui_element is not None and hasattr(event.ui_element, 'object_id'):
+                    object_id = event.ui_element.object_id
+                    print(f"Event from Object ID: {object_id}")
+                    print(f"Triggered by element: {event.ui_element}")
+                    print(f"Event Details: {event.__dict__}")
+                    
+                    if object_id == "params":
+                        self.update_fov()
+                    
+                    # Handle Group B events
+                    elif object_id == "canvas":
+                        self.update_grating()
+
+    def update_grating(self):
+        print('update grating parameters')
+        self.grating_table.data_values[0] = self.fov_in.wavelength / np.linalg.norm(self.fov_out.center - self.fov_in.center)
+        self.grating_table.data_values[1] = self.calculate_angle(self.fov_in.center, self.fov_out.center)
+        self.grating_table.update()
+    
+    def update_fov(self):
+        # self.fov_out
+        print('update fov locations')
+        
 
 # pixel coordinate conversion helper functions
 def px_to_kspace(self, px_coords):
@@ -67,25 +93,20 @@ def px_to_layout(self, px_coords):
     layout_coord[1] = layout_coord[1] * -1
     return layout_coord
 
-# def init_fov(angle_steps, sys_params_table, grating_params_ic_table, grating_params_epe_table, grating_params_oc_table):
-#     hfov, vfov = [float(x) for x in sys_params_table.data_values[1].split('/')]
-#     fov_red_ic = KSpaceFOV(k_space_canvas, (0, 0), hfov, vfov, angle_steps, (255, 0, 0, 128))
-#     ic_grating_picth = float(grating_params_ic_table.data_values[0])
-#     ic_grating_vector_angle = float(grating_params_ic_table.data_values[1])
-#     red_shift_x_ic, red_shift_y_ic = 
+def init_fov(hfov, vfov, angle_steps, centers):
+
+    fov_red_ic = KSpaceFOV(k_space_canvas, centers[0], hfov, vfov, angle_steps, (255, 0, 0, 128))
+    fov_red_epe = KSpaceFOV(k_space_canvas, centers[1], hfov, vfov, angle_steps, (255, 0, 0, 128))
+    fov_red_oc = KSpaceFOV(k_space_canvas, centers[2], hfov, vfov, angle_steps, (255, 0, 0, 128))
     
-#     fov_red_epe = KSpaceFOV(k_space_canvas, (red_shift_x_ic, red_shift_y_ic), hfov, vfov, angle_steps, (255, 0, 0, 128))
-#     fov_red_oc = KSpaceFOV(k_space_canvas, (red_shift_x_epe, red_shift_y_epe), hfov, vfov, angle_steps, (255, 0, 0, 128))
-#     fov_green_ic = KSpaceFOV(k_space_canvas, (0, 0), hfov, vfov, angle_steps, (0, 255, 0, 128))
+    # fov_green_ic = KSpaceFOV(k_space_canvas, (0, 0), hfov, vfov, angle_steps, (0, 255, 0, 128))    
+    # fov_green_epe = KSpaceFOV(k_space_canvas, (green_shift_x_ic, green_shift_y_ic), hfov, vfov, angle_steps, (255, 0, 0, 128))
+    # fov_green_oc = KSpaceFOV(k_space_canvas, (green_shift_x_epe, green_shift_y_epe), hfov, vfov, angle_steps, (255, 0, 0, 128))
     
-#     fov_green_epe = KSpaceFOV(k_space_canvas, (green_shift_x_ic, green_shift_y_ic), hfov, vfov, angle_steps, (255, 0, 0, 128))
-#     fov_green_oc = KSpaceFOV(k_space_canvas, (green_shift_x_epe, green_shift_y_epe), hfov, vfov, angle_steps, (255, 0, 0, 128))
-    
-#     fov_blue_ic = KSpaceFOV(k_space_canvas, (0, 0), hfov, vfov, angle_steps, (0, 0, 255, 128))
-    
-#     fov_blue_epe = KSpaceFOV(k_space_canvas, (blue_shift_x_ic, blue_shift_y_ic), hfov, vfov, angle_steps, (255, 0, 0, 128))
-#     fov_blue_oc = KSpaceFOV(k_space_canvas, (blue_shift_x_epe, blue_shift_y_epe), hfov, vfov, angle_steps, (255, 0, 0, 128))
-#     return
+    # fov_blue_ic = KSpaceFOV(k_space_canvas, (0, 0), hfov, vfov, angle_steps, (0, 0, 255, 128))    
+    # fov_blue_epe = KSpaceFOV(k_space_canvas, (blue_shift_x_ic, blue_shift_y_ic), hfov, vfov, angle_steps, (255, 0, 0, 128))
+    # fov_blue_oc = KSpaceFOV(k_space_canvas, (blue_shift_x_epe, blue_shift_y_epe), hfov, vfov, angle_steps, (255, 0, 0, 128))
+    return fov_red_ic, fov_red_epe, fov_red_oc
 
 
 # Initialize pygame
@@ -137,7 +158,7 @@ system_parameters_label = pygame_gui.elements.UILabel(
     container=system_parameters_panel
 )
 sys_params_table_rect = pygame.Rect(system_parameters_label.rect.topleft[0], system_parameters_label.rect.topleft[1] + system_parameters_label.rect.height + GAP, SYSTEM_PARAMS_WIDTH - 2 * GAP, 300)
-sys_params_table = TableWidget(sys_params_table_rect, manager, ['Parameters', 'Values'], sys_params, 0.55)
+sys_params_table = TableWidget(sys_params_table_rect, manager, ['Parameters', 'Values'], sys_params, 0.55, object_id='params')
 
 doe_parameters_panel = pygame_gui.elements.UIPanel(
     relative_rect=pygame.Rect((SYSTEM_PARAMS_WIDTH + 2 * GAP, GAP), (DOE_PARAMS_PANEL_WIDTH, PARAMS_HEIGHT)),
@@ -153,7 +174,7 @@ doe_parameters_label_1 = pygame_gui.elements.UILabel(
     container=doe_parameters_panel
 )
 doe_params_rect_1 = pygame.Rect(doe_parameters_label_1.rect.topleft[0], doe_parameters_label_1.rect.topleft[1] + system_parameters_label.rect.height + GAP, doe_params_width, PARAMS_HEIGHT)
-grating_params_ic_table = TableWidget(doe_params_rect_1, manager, ['Parameters', 'Values'], grating_params[0], 0.55)
+grating_params_ic_table = TableWidget(doe_params_rect_1, manager, ['Parameters', 'Values'], grating_params[0], 0.55, object_id='params')
 
 doe_parameters_label_2 = pygame_gui.elements.UILabel(
     relative_rect=pygame.Rect((2 * GAP + doe_params_width, GAP), (doe_params_width, 30)),
@@ -171,7 +192,7 @@ doe_parameters_label_3 = pygame_gui.elements.UILabel(
     container=doe_parameters_panel
 )
 doe_params_rect_3 = pygame.Rect(doe_parameters_label_3.rect.topleft[0], doe_parameters_label_3.rect.topleft[1] + system_parameters_label.rect.height + GAP, doe_params_width, PARAMS_HEIGHT)
-grating_params_oc_table = TableWidget(doe_params_rect_3, manager, ['Parameters', 'Values'], grating_params[2], 0.55)
+grating_params_oc_table = TableWidget(doe_params_rect_3, manager, ['Parameters', 'Values'], grating_params[2], 0.55, object_id='params')
 
 
 k_space_map_panel = pygame_gui.elements.UIPanel(
@@ -187,7 +208,7 @@ k_space_map_label = pygame_gui.elements.UILabel(
 )
 k_space_rect = pygame.Rect(k_space_map_label.rect.topleft[0], k_space_map_label.rect.topleft[1] + k_space_map_label.rect.height + GAP, KSPACE_MAP_WIDTH - 2 * GAP, KSPACE_MAP_WIDTH - 2 * GAP)
 init_kspace = Init_Kspace(1, 2)
-k_space_canvas = ZoomableCanvas(window_surface, k_space_rect.x, k_space_rect.y, k_space_rect.width, k_space_rect.height, 800, 800, 200, init_kspace, px_to_kspace)
+k_space_canvas = ZoomableCanvas(window_surface, k_space_rect.x, k_space_rect.y, k_space_rect.width, k_space_rect.height, 800, 800, 200, init_kspace, px_to_kspace, object_id='canvas')
 
 
 layout_view_panel = pygame_gui.elements.UIPanel(
@@ -202,6 +223,15 @@ layout_view_label = pygame_gui.elements.UILabel(
     manager=manager,
     container=layout_view_panel
 )
+
+fov_red_ic, fov_red_epe, fov_red_oc = init_fov(30, 30, 0.1, [(0, 0), (1.5, 0), (0, -1.5)])
+k_space_canvas.add_shape(fov_red_ic)
+k_space_canvas.add_shape(fov_red_epe)
+k_space_canvas.add_shape(fov_red_oc)
+doe_1 = DOE(fov_red_ic, fov_red_epe, grating_params_ic)
+doe_2 = DOE(fov_red_epe, fov_red_oc, grating_params_epe)
+doe_3 = DOE(fov_red_oc, fov_red_ic, grating_params_oc)
+does = [doe_1, doe_2, doe_3]
 
 # layout_view_rect = pygame.Rect(layout_view_label.rect.topleft[0], layout_view_label.rect.topleft[1] + layout_view_label.rect.height + GAP, LAYOUT_WIDTH - 2 * GAP, WINDOW_HEIGHT - PARAMS_HEIGHT - 3 * GAP)
 layout_view_rect = pygame.Rect(layout_view_label.rect.topleft[0], layout_view_label.rect.topleft[1] + layout_view_label.rect.height + GAP, LAYOUT_WIDTH - 2 * GAP, layout_view_panel.rect.height - layout_view_label.rect.height - 3 * GAP)
@@ -226,6 +256,8 @@ while is_running:
         grating_params_ic_table.handle_event(event)
         grating_params_epe_table.handle_event(event)
         grating_params_oc_table.handle_event(event)
+        for d in does:
+            d.handle_event(event)
 
     manager.update(time_delta)
     window_surface.fill((255, 255, 255))

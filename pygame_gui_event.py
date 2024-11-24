@@ -68,21 +68,22 @@ while is_running:
             is_running = False
         
         # Handle all pygame.USEREVENTs dynamically
-        if event.type == pygame.USEREVENT:
-            if hasattr(event, 'ui_element'):
-                if event.ui_element is not None and hasattr(event.ui_element, 'object_id'):
-                    object_id = event.ui_element.object_id
-                    print(f"Event from Object ID: {object_id}")
-                    print(f"Triggered by element: {event.ui_element}")
-                    print(f"Event Details: {event.__dict__}")
-                    
-                    # Handle Group A events
-                    if object_id == "A":
-                        print("This event belongs to Group A.")
-                    
-                    # Handle Group B events
-                    elif object_id == "B":
-                        print("This event belongs to Group B.")
+        # if event.type == pygame.USEREVENT:
+        # if event.type == pygame.USEREVENT and not event.type == pygame_gui.UI_BUTTON_ON_HOVERED:
+        if event.type == pygame.USEREVENT and event.__dict__.get('user_type') not in [32870, 32871]:
+            if 'ui_element' in event.__dict__:
+                object_id = event.__dict__['ui_object_id']  # Corrected to access the attribute directly
+                print(f"Event from Object ID: {object_id}")
+                print(f"Triggered by element: {event.ui_element}")
+                print(f"Event Details: {event.__dict__}")
+                
+                # Handle Group A events
+                if "A" in object_id:
+                    print("This event belongs to Group A.")
+                
+                # Handle Group B events
+                elif "B" in object_id:
+                    print("This event belongs to Group B.")u7u
         
         # Pass the event to the UI manager
         ui_manager.process_events(event)

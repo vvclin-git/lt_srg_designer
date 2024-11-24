@@ -50,13 +50,13 @@ class DOE:
          # Handle all pygame.USEREVENTs dynamically
         if event.type == pygame.USEREVENT:
             if hasattr(event, 'ui_element'):
-                if event.ui_element is not None and hasattr(event.ui_element, 'object_id'):
-                    object_id = event.ui_element.object_id
+                if event.ui_element is not None and hasattr(event.__dict__, 'ui_object_id'):
+                    object_id = event.__dict__['ui_object_id']
                     print(f"Event from Object ID: {object_id}")
                     print(f"Triggered by element: {event.ui_element}")
                     print(f"Event Details: {event.__dict__}")
                     
-                    if object_id == "params":
+                    if object_id == "panel.params":
                         self.update_fov()
                     
                     # Handle Group B events

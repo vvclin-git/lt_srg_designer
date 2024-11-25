@@ -6,7 +6,7 @@ import numpy as np
 from pygame_gui.elements import UIPanel, UILabel, UITextEntryLine, UIButton
 
 class TableWidget:
-    def __init__(self, parent_rect, manager, headers, data, label_ratio=0.4, gap_width=10, connected_objs=[], object_id=''):
+    def __init__(self, parent_rect, manager, headers, data, label_ratio=0.4, gap_width=10, calc_func=None, object_id=''):
 
         theme = manager.ui_theme        
         label_font_size = theme.ui_element_fonts_info['label']['en']['size'] 
@@ -16,7 +16,7 @@ class TableWidget:
         self.manager = manager
         self.error_dialogue = None
         self.last_valid_input = ''
-        self.connected_objs = connected_objs
+        self.calc_func = calc_func
         # Set up table data
         self.headers = headers
         self.data = data
@@ -72,38 +72,41 @@ class TableWidget:
 
     def handle_event(self, event):
         # Event handler that is triggered when events occur
-        if event.type == pygame_gui.UI_TEXT_ENTRY_CHANGED:
+        # if event.type == pygame_gui.UI_TEXT_ENTRY_CHANGED:
+        if event.type == pygame_gui.UI_TEXT_ENTRY_FINISHED:
             for i, text_entry in enumerate(self.data_value_fields):                
                 if event.ui_element == text_entry:
-                    regex_str = self.data[i]['regex']
-                    self.on_text_input_finish(text_entry, regex_str)
+                    regex_str = self.data[i]['regex']                    
+                    self.on_text_input_finish(text_entry, regex_str, self.data_values[i])
                     break
-            self.data_values[i] = text_entry.get_text()            
-            for c in self.connected_objs:
-                c.update(self.data_values)
+            self.data_values[i] = text_entry.get_text()
+            if self.calc_func is not None:
+                self.calc_func(self)
+                self.update()            
+            # for c in self.connected_objs:
+            #     c.update()
         # if event.type == pygame_gui.UI_BUTTON_PRESSED and self.error_dialog is not None:
         #     if event.ui_element.text == "Dismiss":
         #         self.error_dialog.kill()
         #         self.error_dialog = None  # Reset dialog tracking
 
-    def on_text_input_finish(self, text_entry, regex_str):
+    def on_text_input_finish(self, text_entry, regex_str, last_valid_input):
         input_text = text_entry.get_text()
-        if input_text.strip() == "":
-                print("Input is empty, waiting for user input...")
-        elif self.test_regex(input_text, regex_str):
-            # Valid input: Update the last valid input and print
-            self.last_valid_input = input_text
+        # if input_text.strip() == "":
+        #         print("Input is empty, waiting for user input...")
+        if self.test_regex(input_text, regex_str):
+            # Valid input: Update the last valid input and print            
             print(f"Valid input: {input_text}")
         else:
             # Invalid input: Revert to the last valid input
-            if self.error_dialogue is None:
-                self.error_dialogue = pygame_gui.windows.UIMessageWindow(
-                    rect=pygame.Rect((250, 200), (300, 150)),
-                    html_message=f'Invalid input: "{input_text}". Reverting to last valid input: "{self.last_valid_input}".',
-                    manager=self.manager,
-                    window_title='Input Error'
-                )
-            text_entry.set_text(self.last_valid_input)
+            # if self.error_dialogue is None:
+            self.error_dialogue = pygame_gui.windows.UIMessageWindow(
+                rect=pygame.Rect((250, 200), (300, 150)),
+                html_message=f'Invalid input: "{input_text}". Reverting to last valid input: "{last_valid_input}".',
+                manager=self.manager,
+                window_title='Input Error'
+            )
+            text_entry.set_text(last_valid_input)
         print("Text input finished: ", text_entry.get_text())
 
     def update(self):
@@ -142,9 +145,22 @@ if __name__ == "__main__":
     with open('sys_params.json') as f:
         data = json.load(f)
     
-
+    def parse_float_vals(input, delimiter):
+        input_vals = input.split(delimiter)
+        parsed_vals = []
+        for v in input_vals:
+            parsed_vals.append(float(v))
+        return parsed_vals
+    
+    def sys_params_calc(self):                    
+        hfov, vfov = parse_float_vals(self.data_values[1], '/')
+        dfov = np.sqrt(hfov ** 2 + vfov ** 2)
+        self.data_values[2] = f'{dfov:0.4f}'
+        pass
+    
+    
     # Create table widget
-    table_widget = TableWidget(pygame.Rect((15, 30), (470, 300)), headers=headers, data=data, label_ratio=0.5, gap_width=5, manager=gui_manager)
+    table_widget = TableWidget(pygame.Rect((15, 30), (470, 300)), headers=headers, data=data, label_ratio=0.5, gap_width=5, manager=gui_manager, calc_func=sys_params_calc)
     # table_widget = TableWidget(window.get_rect(), headers=headers, data=data, theme_path=theme_path, label_ratio=0.4, editable_ratio=0.4, gap_ratio=0.1, manager=gui_manager)
 
     # Create buttons for testing data loading and output

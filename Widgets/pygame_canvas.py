@@ -4,6 +4,7 @@ import sys
 import numpy as np
 import ast
 
+CANVAS_MODIFIED_EVENT = pygame.USEREVENT + 300
 
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0) 
@@ -77,24 +78,39 @@ class Polygon:
 
 class KSpaceFOV(Polygon):    
     
-    def __init__(self, kspace_canvas, center, hfov, vfov, angle_step, color, wavelength=550, doe=None):
-        num = int((hfov / angle_step)) + 1
-        hfov_pts = np.linspace(-0.5 * hfov, 0.5 * hfov, num)
-        vfov_pts = np.linspace(-0.5 * vfov, 0.5 * vfov, num)
+    def __init__(self, kspace_canvas, center, hfov, vfov, angle_step, color, wavelength=550):
+        self.pts_num = int((hfov / angle_step)) + 1
+        # hfov_pts = np.linspace(-0.5 * hfov, 0.5 * hfov, self.pts_num)
+        # vfov_pts = np.linspace(-0.5 * vfov, 0.5 * vfov, self.pts_num)
+        # vertices = self.get_outermost_points(hfov_pts, vfov_pts)
+        # vertices = self.angle_to_kspace(vertices)        
+        self.center = np.array(center, dtype=float)
+        # vertices += self.center
+        self.scale = kspace_canvas.scale
+        # vertices_px = vertices * kspace_canvas.scale        
+        # vertices_px[:, 1] *= -1
+        self.kspace_canvas_center = kspace_canvas.center
+        # vertices_px += self.kspace_canvas_center
+        vertices_px = self.update_vertices(center, hfov, vfov)
+        super().__init__(vertices_px)
+        self.color = color
+        self.wavelength = wavelength
+        # self.doe = doe
+    
+    def update_vertices(self, center, hfov, vfov):        
+        hfov_pts = np.linspace(-0.5 * hfov, 0.5 * hfov, self.pts_num)
+        vfov_pts = np.linspace(-0.5 * vfov, 0.5 * vfov, self.pts_num)
         vertices = self.get_outermost_points(hfov_pts, vfov_pts)
         vertices = self.angle_to_kspace(vertices)        
         self.center = np.array(center, dtype=float)
         vertices += self.center
-        self.scale = kspace_canvas.scale
-        vertices_px = vertices * kspace_canvas.scale        
-        vertices_px[:, 1] *= -1
-        self.kspace_canvas_center = kspace_canvas.center
+        vertices_px = vertices * self.scale        
+        vertices_px[:, 1] *= -1        
         vertices_px += self.kspace_canvas_center
-        super().__init__(vertices_px)
-        self.color = color
-        self.wavelength = wavelength
-        self.doe = doe
-    
+        self.vertices = vertices_px
+        return vertices_px
+
+
     def angle_to_kspace(self, angle_coords):
         kspace_coords = np.zeros_like(angle_coords)
         angle_coords = np.radians(angle_coords)
@@ -128,9 +144,11 @@ class KSpaceFOV(Polygon):
     def move_polygon(self, distance):
         for i in range(len(self.vertices)):            
             self.vertices[i] = (self.vertices[i][0] + distance[0], self.vertices[i][1] + distance[1])
-        self.center += np.array(distance) / self.scale
-        if self.doe is not None:
-            self.doe.update()
+        distance = np.array(distance)
+        distance[1] *= -1
+        self.center += distance / self.scale
+        # if self.doe is not None:
+        #     self.doe.update()
 
 
     def render(self, screen):
@@ -317,11 +335,13 @@ class ZoomableCanvas:
                     self.drag_start = ((event.pos[0] - self.x), (event.pos[1] - self.y))
                     print(f'moving polygon with displacement of {dx}, {dy}')
                     self.selected_polygon.move_polygon((dx, dy))
+                    pygame.event.post(pygame.event.Event(CANVAS_MODIFIED_EVENT))
                     self.update_canvas()
                     
                 elif self.resizing_polygon:
                     mouse_x, mouse_y = (event.pos[0] - self.x - self.offset_x) / self.zoom, (event.pos[1] - self.y - self.offset_y) / self.zoom
                     self.selected_polygon.update_vertex(self.dragging_vertex, (mouse_x, mouse_y))
+                    pygame.event.post(pygame.event.Event(CANVAS_MODIFIED_EVENT))
                     self.update_canvas()
     
     def draw(self):
@@ -475,6 +495,9 @@ if __name__ == "__main__":
             # Pass events to manager and canvas
             manager.process_events(event)
             canvas.handle_event(event)
+
+            if event.type == CANVAS_MODIFIED_EVENT:
+                print('canvas was modified')
 
         # Update manager
         manager.update(time_delta)

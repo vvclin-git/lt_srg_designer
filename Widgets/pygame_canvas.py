@@ -252,8 +252,7 @@ class ZoomableCanvas:
         return False
 
 
-    def handle_event(self, event):
-        
+    def handle_event(self, event):        
         if self.in_canvas(pygame.mouse.get_pos()):
             # print(self.px_to_coord(self, pygame.mouse.get_pos()))
             if event.type == pygame.MOUSEWHEEL:

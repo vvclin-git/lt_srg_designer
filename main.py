@@ -14,15 +14,6 @@ ctypes.windll.user32.SetProcessDPIAware()
 # Initialize pygame
 pygame.init()
 
-# Constants based on the schematic
-WINDOW_WIDTH = 1800
-WINDOW_HEIGHT = 1200
-GAP = 10
-SYSTEM_PARAMS_WIDTH = 400
-DOE_PARAMS_PANEL_WIDTH = 1370
-PARAMS_HEIGHT = 400
-LAYOUT_WIDTH = 1270
-KSPACE_MAP_WIDTH = 500
 
 theme_path = '.\\Widgets\\theme.json'
 with open('sys_params.json', 'r') as f:

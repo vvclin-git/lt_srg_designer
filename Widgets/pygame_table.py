@@ -6,7 +6,7 @@ import numpy as np
 from pygame_gui.elements import UIPanel, UILabel, UITextEntryLine, UIButton
 
 class TableWidget:
-    def __init__(self, parent_rect, manager, headers, data, label_ratio=0.4, gap_width=10, calc_func=None, object_id=''):
+    def __init__(self, parent_rect, manager, headers, data, label_ratio=0.4, gap_width=10, calc_func=None, connected_objs=[], object_id=''):
 
         theme = manager.ui_theme        
         label_font_size = theme.ui_element_fonts_info['label']['en']['size'] 
@@ -17,6 +17,7 @@ class TableWidget:
         self.error_dialogue = None
         self.last_valid_input = ''
         self.calc_func = calc_func
+        self.connected_objs = connected_objs
         # Set up table data
         self.headers = headers
         self.data = data
@@ -72,7 +73,6 @@ class TableWidget:
 
     def handle_event(self, event):
         # Event handler that is triggered when events occur
-        # if event.type == pygame_gui.UI_TEXT_ENTRY_CHANGED:
         if event.type == pygame_gui.UI_TEXT_ENTRY_FINISHED:
             for i, text_entry in enumerate(self.data_value_fields):                
                 if event.ui_element == text_entry:
@@ -82,13 +82,10 @@ class TableWidget:
             self.data_values[i] = text_entry.get_text()
             if self.calc_func is not None:
                 self.calc_func(self)
-                self.update()            
-            # for c in self.connected_objs:
-            #     c.update()
-        # if event.type == pygame_gui.UI_BUTTON_PRESSED and self.error_dialog is not None:
-        #     if event.ui_element.text == "Dismiss":
-        #         self.error_dialog.kill()
-        #         self.error_dialog = None  # Reset dialog tracking
+                self.update()                            
+            for c in self.connected_objs:
+                c.update(self)
+            self.manager.set_focus_set(None) # Need this or the edited field will disappear!
 
     def on_text_input_finish(self, text_entry, regex_str, last_valid_input):
         input_text = text_entry.get_text()

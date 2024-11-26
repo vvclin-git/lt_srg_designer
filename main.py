@@ -23,12 +23,10 @@ class Init_Kspace:
     def __call__(self, instance):
         """Invoke the wrapped function with the given instance and stored parameters"""
         print('init k-space plot')
-        self.draw_kspace_circles(instance, self.n1, self.n2)
-
-# class LT_SRG_Designer:
-#     def __init__(self):
-#         pass
-
+        self.draw_kspace_circles(instance, self.n1, self.n2)    
+    def update(self, connected_table):
+        self.n1 = float(connected_table.data_values[7])
+        self.n2 = float(connected_table.data_values[6])
 
 
 class DOE:
@@ -78,7 +76,6 @@ class DOE:
         for v in input_vals:
             parsed_vals.append(float(v))
         return parsed_vals
-
 
     def update_fov(self):        
         hfov, vfov = self.parse_float_vals(self.system_params_table.data_values[1], '/')        
@@ -162,6 +159,7 @@ for i, t in enumerate(grating_types):
     with open(f'grating_params_{t}.json', 'r') as f:
         grating_params[i] = json.load(f)
 
+init_kspace = Init_Kspace(1, 2)
 
 # Set up the display
 window_surface = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
@@ -184,7 +182,7 @@ system_parameters_label = pygame_gui.elements.UILabel(
     container=system_parameters_panel
 )
 sys_params_table_rect = pygame.Rect(system_parameters_label.rect.topleft[0], system_parameters_label.rect.topleft[1] + system_parameters_label.rect.height + GAP, SYSTEM_PARAMS_WIDTH - 2 * GAP, 300)
-sys_params_table = TableWidget(sys_params_table_rect, manager, ['Parameters', 'Values'], sys_params, 0.55, object_id='params', calc_func=sys_params_calc)
+sys_params_table = TableWidget(sys_params_table_rect, manager, ['Parameters', 'Values'], sys_params, 0.55, object_id='params', calc_func=sys_params_calc, connected_objs=[init_kspace])
 
 doe_parameters_panel = pygame_gui.elements.UIPanel(
     relative_rect=pygame.Rect((SYSTEM_PARAMS_WIDTH + 2 * GAP, GAP), (DOE_PARAMS_PANEL_WIDTH, PARAMS_HEIGHT)),
@@ -209,7 +207,7 @@ doe_parameters_label_2 = pygame_gui.elements.UILabel(
     container=doe_parameters_panel
 )
 doe_params_rect_2 = pygame.Rect(doe_parameters_label_2.rect.topleft[0], doe_parameters_label_2.rect.topleft[1] + system_parameters_label.rect.height + GAP, doe_params_width, PARAMS_HEIGHT)
-grating_params_epe_table = TableWidget(doe_params_rect_2, manager, ['Parameters', 'Values'], grating_params[1], 0.55)
+grating_params_epe_table = TableWidget(doe_params_rect_2, manager, ['Parameters', 'Values'], grating_params[1], 0.55, object_id='params')
 
 doe_parameters_label_3 = pygame_gui.elements.UILabel(
     relative_rect=pygame.Rect((3 * GAP + 2 * doe_params_width, GAP), (doe_params_width, 30)),
@@ -233,7 +231,6 @@ k_space_map_label = pygame_gui.elements.UILabel(
     container=k_space_map_panel
 )
 k_space_rect = pygame.Rect(k_space_map_label.rect.topleft[0], k_space_map_label.rect.topleft[1] + k_space_map_label.rect.height + GAP, KSPACE_MAP_WIDTH - 2 * GAP, KSPACE_MAP_WIDTH - 2 * GAP)
-init_kspace = Init_Kspace(1, 2)
 k_space_canvas = ZoomableCanvas(window_surface, k_space_rect.x, k_space_rect.y, k_space_rect.width, k_space_rect.height, 800, 800, 200, init_kspace, px_to_kspace, object_id='canvas')
 
 

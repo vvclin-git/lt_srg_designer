@@ -83,7 +83,7 @@ while is_running:
                 
                 # Handle Group B events
                 elif "B" in object_id:
-                    print("This event belongs to Group B.")u7u
+                    print("This event belongs to Group B.")
         
         # Pass the event to the UI manager
         ui_manager.process_events(event)

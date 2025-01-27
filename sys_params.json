@@ -15,7 +15,7 @@
     {
         "label": "Diagonal FOV",
         "value": "42.4264",
-        "static": false,
+        "static": true,
         "regex":"^[1-9]\\d*(\\.\\d+)?$"
     },
     {
